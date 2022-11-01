@@ -7,7 +7,7 @@
 #include <time.h> //for time()
 
 /*Variable Declaration*/
-long n,m,o,k,sum,threads = 1; //Default value of threads
+long n,m,o,k,threads = 16; //Default value of threads
 
 int main(void){
     printf("Enter the size of matrix 1 as row x col: ");
@@ -18,9 +18,12 @@ int main(void){
         printf("Incorrect size of matrix for multiplication \n");
         return -1;
     }
-    long* mat1[n]; //Matrix declaration n x m
-    long* mat2[m]; // m x k
-    long* mat3[n]; // n x k
+    // m = 1250;
+    // n = 1250;
+    // k = 1250;
+    long* mat1[n]; // n x m matrix1
+    long* mat2[m]; // m x k matrix2
+    long* mat3[n]; // n x k result_matrix
     printf("Please enter the number of threads to be used: ");
     scanf("%lu",&threads);
     
@@ -31,25 +34,21 @@ int main(void){
     unsigned int seed = time(NULL) + omp_get_thread_num();
     
     /*Dynamic Memory Allocation for matrices begins*/
-    #pragma omp parallel for num_threads(threads)
     for(long i=0; i<n; i++){     
-        mat1[i] = (long*)malloc(m * sizeof(long));
-        mat3[i] = (long*)malloc(k * sizeof(long));
+        mat1[i] = (long*)calloc(m,sizeof(long));
+        mat3[i] = (long*)calloc(k,sizeof(long));
     }
-    #pragma omp parallel for num_threads(threads)
     for(long i = 0; i<m; i++){
-        mat2[i] = (long*)malloc(k * sizeof(long));
+        mat2[i] = (long*)calloc(k,sizeof(long));
     }
     /*Dynamic Memory Allocation for matrices ends*/
 
     /*Filling the matrices with random values begins*/
-    #pragma omp parallel for num_threads(threads)
     for(long i=0; i<n; i++){
          for(long j=0; i<m; i++){
             mat1[i][j] = rand_r(&seed);
          }
     }
-    #pragma omp parallel for num_threads(threads)
     for(long i=0; i<m; i++){
          for(long j=0; i<k; i++){
             mat2[i][j] = rand_r(&seed);
@@ -61,11 +60,9 @@ int main(void){
     #pragma omp parallel for num_threads(threads)    
     for(long i=0; i<n; i++){
         for (long j=0; j<k; j++ ){
-            sum = 0;
             for (long k=0; k<m; k++){
-                sum += mat1[i][k] * mat2[k][j];
+                mat3[i][j] += mat1[i][k] * mat2[k][j];
             }
-            mat3[i][j] = sum;
         }
     }
 }
